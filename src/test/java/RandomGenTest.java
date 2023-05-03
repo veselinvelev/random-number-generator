@@ -1,3 +1,4 @@
+import generator.IRandomGen;
 import generator.exceptions.EmptyArrayInputException;
 import generator.exceptions.InfiniteProbabilityException;
 import generator.exceptions.LengthMismatchException;
@@ -14,7 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class RandomGenTest {
-
+    private static final int SAMPLES = 1000000;
+    private static final float DEVIATION = 1f;
 
     @Test
     void constructorShouldThrowNullArrayInputException_WhenNumsArrayNull() {
@@ -94,4 +96,32 @@ public class RandomGenTest {
         assertTrue(IntStream.of(nums).anyMatch(n -> n == result));
     }
 
+    @Test
+    void nextNumShouldReturnNumsWithGivenProbabilities() {
+        int[] nums = new int[]{-1, 0, 1, 2, 3};
+        float[] probs = new float[]{0.01f, 0.3f, 0.58f, 0.1f, 0.01f};
+
+        int[] results = new int[nums.length];
+        IRandomGen randomGen = new RandomGen(nums, probs);
+
+        for (int sampleCont = 0; sampleCont < SAMPLES; sampleCont++) {
+
+            int random = randomGen.nextNum();
+
+            for (int j = 0; j < results.length; j++) {
+                if (random == nums[j]) {
+                    results[j]++;
+                }
+            }
+        }
+
+        for (int i = 0; i < results.length; i++) {
+            float low = (results[i] / 10000f) - DEVIATION;
+            float up = (results[i] / 10000f) + DEVIATION;
+            float prob = probs[i] * 100f;
+
+            assertTrue(Float.compare(low, prob) <= 0);
+            assertTrue(Float.compare(up, prob) >= 0);
+        }
+    }
 }
